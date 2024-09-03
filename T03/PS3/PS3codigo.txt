@@ -1,0 +1,109 @@
+
+/*******************************************************************************
+                          Semana 3: Problem Set 2 
+
+                          Universidad de San Andrés
+                              Economía Aplicada
+							         2024			
+						Integrantes: Ferico Aiel Lopez
+									 Rodrigo Braga
+									 Joaquin Musich
+									 Ignacio Anchorena
+*******************************************************************************/
+clear all
+gl main "" // No vamos a usar ninguna base de datos para esta parte del trabajo
+
+gl input "$main/input"
+gl output "$main/output"
+
+clear
+
+set obs =100 
+set seed 1233 // seteamos la semilla asi las 100 obs son siempre iguales
+
+*Ahora genero las variables que voy a usar para la parte 1 del problem set 
+
+gen intelligence=int(invnormal(uniform())*20+100) // Primero la variable intelligence
+
+gen education=int(intelligence/10+invnormal(uniform())*1) // Depues ponemos la variable education que va a depender de intelligence
+
+gen w=int(invnormal(uniform())*3+10) // Generamos una variable que se llama w
+
+gen z=int(invnormal(uniform())*1+5) // Generamos una variable que se llama z
+
+gen u=int(invnormal(uniform())*1+7) // Por último, generamos la variable u que será el termino error
+
+gen wage=3*intelligence+w+2*z+u // Wage va a ser nuestar variable explicada
+
+* Ahora corremos una regresion con wage como variable dependiente de w y z para guardar y comparar con los futuros resultados
+
+reg wage intelligence w z 
+predict wage_hat_1 // Guardamos wage estiamdo
+est store ols1
+
+////// Inciso 1 //////
+
+//Para este inciso vamos a hacer lo mismo que antes pero esta vez con el doble de observaciones. Para esto vamos a utilizar la misma seed y las variables estarán conformadas como antes. Corremos la misma regresión y vemos las diferencias en los desviós estandar
+
+clear
+set obs =200
+set seed 1233
+
+gen intelligence=int(invnormal(uniform())*20+100)
+gen education=int(intelligence/10+invnormal(uniform())*1)
+corr education intelligence
+
+gen w=int(invnormal(uniform())*3+10)
+gen z=int(invnormal(uniform())*1+5)
+gen u=int(invnormal(uniform())*1+7)
+gen wage=3*intelligence+w+2*z+u
+
+reg wage intelligence w z
+predict y_hat_2
+est store ols2
+
+esttab ols1 ols2 using "$output/Tabla1.rtf", se replace
+
+////// Inciso 2 //////
+
+// Para este inciso vamos a contruir la mismsa regresion que al principio pero a la variable "u" le vamos a sumar 12 en vez de 7 para aumentar su varianza
+
+gen intelligence=int(invnormal(uniform())*20+100)
+gen education=int(intelligence/10+invnormal(uniform())*1)
+corr education intelligence
+
+gen w=int(invnormal(uniform())*3+10)
+gen z=int(invnormal(uniform())*1+5)
+gen u=int(invnormal(uniform())*1+12)
+gen wage=3*intelligence+w+2*z+u
+
+reg wage intelligence w z
+predict mu_hat, residuals // Guardamos los residuos
+generate sumatoria_mu_hat = round(sum(mu_hat),0)
+
+est store ols3
+
+102 esttab ols1 ols3 using "$output/Tabla2.rtf", se replace
+
+////// Inciso 3 //////
+
+// Para este inciso vamos a contruir la mismsa regresion que al principio pero a la variable intelligence la vamos a multiplicar por 40 en vez de 20 para aumentar su varianza
+
+clear
+86 set obs=100
+87 set seed 1233
+88 gen intelligence=int(invnormal(uniform())*40+100) 
+89 gen education=int(intelligence/10+invnormal(uniform())*1)
+90 corr education intelligence
+
+91 gen w=int(invnormal(uniform())*3+10)
+92 gen z=int(invnormal(uniform())*1+5)
+93 gen u=int(invnormal(uniform())*1+7)
+
+94 gen wage=3*intelligence+w+2*z+u
+95 reg wage intelligence w z
+96 predict y_hat_3
+
+est store ols4
+
+esttab ols1 ols4 using "$output/Tabla3.rtf", se replace
